@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="training_portal_registration_form" name="Student Training Registration">
+    <t t-call="website.layout">
+        <div class="o_portal_wrap">
+
+            <!-- Hero Banner -->
+            <div style="background: linear-gradient(135deg, #0d2137 0%, #0e6b6b 100%); padding: 48px 0 40px; text-align: center; margin-bottom: 36px;">
+                <h1 style="color:#ffffff; font-size:2rem; font-weight:700; margin:0;">
+                    &#127891; <span style="color:#ffffff;">Student</span>
+                    <span style="color:#26d0ce;"> Training</span>
+                    <span style="color:#ffffff;"> Registration</span>
+                </h1>
+            </div>
+
+            <div class="container" style="max-width:780px; margin:0 auto; padding-bottom:60px;">
+
+                <!-- Error messages -->
+                <t t-if="error_message">
+                    <div class="alert alert-danger" role="alert">
+                        <ul class="mb-0">
+                            <t t-foreach="error_message" t-as="msg">
+                                <li><t t-esc="msg"/></li>
+                            </t>
+                        </ul>
+                    </div>
+                </t>
+
+                <form action="/training/register/submit" method="POST" id="training_form">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                    <!-- SECTION 1: Student Information -->
+                    <div class="card mb-4 shadow-sm" style="border-left:4px solid #0e6b6b; border-radius:8px;">
+                        <div class="card-body" style="padding:28px;">
+                            <h5 style="color:#0e6b6b; font-weight:700; margin-bottom:20px;">
+                                &#128100; Student Information
+                            </h5>
+
+                            <!-- University ID first — triggers auto-fill -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">University ID <span class="text-danger">*</span></label>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <input type="text" name="university_id" id="university_id_input"
+                                           placeholder="Enter your university ID"
+                                           t-att-value="form_data.get('university_id', '')"
+                                           t-att-class="'form-control border-danger' if error.get('university_id') else 'form-control'"
+                                           style="max-width:340px;"/>
+                                    <span id="student_lookup_status" style="font-size:.85rem;"></span>
+                                </div>
+                            </div>
+
+                            <!-- Auto-filled fields (shown after lookup) -->
+                            <div id="div_student_info" style="display:none;">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Student Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="student_name" id="inp_student_name"
+                                           placeholder="Your full name"
+                                           t-att-value="form_data.get('student_name', '')"
+                                           t-att-class="'form-control border-danger' if error.get('student_name') else 'form-control'"/>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">University <span class="text-danger">*</span></label>
+                                        <select name="university_name" id="sel_university"
+                                                t-att-class="'form-select border-danger' if error.get('university_name') else 'form-select'">
+                                            <option value="">Select University</option>
+                                            <option value="baraj"
+                                                    t-att-selected="'selected' if form_data.get('university_name') == 'baraj' else None">
+                                                &#1580;&#1575;&#1605;&#1593;&#1577; &#1576;&#1585;&#1580; &#1575;&#1604;&#1593;&#1585;&#1576; &#1575;&#1604;&#1578;&#1603;&#1606;&#1608;&#1604;&#1608;&#1580;&#1610;&#1577;
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Year Level <span class="text-danger">*</span></label>
+                                        <select name="university_group" id="sel_level"
+                                                t-att-class="'form-select border-danger' if error.get('university_group') else 'form-select'">
+                                            <option value="">Select Year Level</option>
+                                            <t t-foreach="levels" t-as="lvl">
+                                                <option t-att-value="lvl.id"
+                                                        t-att-selected="'selected' if str(lvl.id) == form_data.get('university_group','') else None">
+                                                    <t t-esc="lvl.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">WhatsApp Number <span class="text-danger">*</span></label>
+                                        <input type="tel" name="phone_whatsapp" id="inp_phone"
+                                               placeholder="e.g. 01111281663"
+                                               t-att-value="form_data.get('phone_whatsapp', '')"
+                                               t-att-class="'form-control border-danger' if error.get('phone_whatsapp') else 'form-control'"/>
+                                    </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label class="form-label fw-semibold">National ID <span class="text-danger">*</span></label>
+                                        <input type="text" name="national_id" id="national_id_input"
+                                               placeholder="14-digit national ID" maxlength="14"
+                                               t-att-value="form_data.get('national_id', '')"
+                                               t-att-class="'form-control border-danger' if error.get('national_id') else 'form-control'"/>
+                                        <small class="text-muted" id="nid_counter">0 / 14 digits</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Not found — block registration -->
+                            <div id="div_not_found" style="display:none;">
+                                <div class="alert alert-danger py-2" style="font-size:.88rem;">
+                                    &#10060; This University ID is not registered in our system. You cannot proceed with registration. Please contact your university coordinator.
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Training Selection -->
+                    <div id="div_training_section" class="card mb-4 shadow-sm" style="border-left:4px solid #0e6b6b; border-radius:8px; display:none;">
+                        <div class="card-body" style="padding:28px;">
+                            <h5 style="color:#0e6b6b; font-weight:700; margin-bottom:20px;">
+                                &#127970; Training Selection
+                            </h5>
+
+                            <!-- Company -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Training Company <span class="text-danger">*</span></label>
+                                <select name="training_company_id" id="sel_company"
+                                        t-att-class="'form-select border-danger' if error.get('training_company_id') else 'form-select'">
+                                    <option value="">Select Company</option>
+                                    <t t-foreach="companies" t-as="company">
+                                        <option t-att-value="company.id"
+                                                t-att-selected="'selected' if str(company.id) == form_data.get('training_company_id','') else None">
+                                            <t t-esc="company.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <!-- Program (AJAX) -->
+                            <div class="mb-3" id="div_program" style="display:none;">
+                                <label class="form-label fw-semibold">Training Program <span class="text-danger">*</span></label>
+                                <select name="training_program_id" id="sel_program" class="form-select">
+                                    <option value="">Select Program</option>
+                                </select>
+                            </div>
+
+                            <!-- Year Levels (AJAX, display only) -->
+                            <div class="mb-3" id="div_levels" style="display:none;">
+                                <label class="form-label fw-semibold">Year Level(s)</label>
+                                <div id="level_badges" class="d-flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <!-- Hidden: submitted week id -->
+                            <input type="hidden" name="training_week_id" id="inp_week"/>
+
+                            <!-- Week Cards (AJAX) -->
+                            <div id="div_weeks" style="display:none;">
+                                <label class="form-label fw-semibold">
+                                    Available Training Weeks <span class="text-danger">*</span>
+                                </label>
+                                <t t-if="error.get('training_week_id')">
+                                    <div class="text-danger mb-1" style="font-size:.85rem;">Please select a training week.</div>
+                                </t>
+                                <div id="week_cards" class="d-flex flex-wrap gap-3 mt-2"></div>
+                            </div>
+
+                            <div id="div_weeks_loading" style="display:none; color:#0e6b6b; font-size:.9rem; margin-top:8px;">
+                                &#9203; Loading weeks...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button type="submit" id="btn_submit" class="btn btn-lg px-5"
+                                style="background:linear-gradient(135deg,#0d2137,#0e6b6b); color:#fff; border:none; border-radius:8px; font-weight:600; letter-spacing:.5px;">
+                            Submit Registration
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+        /* <![CDATA[ */
+        (function () {
+            // ── Restore values after validation error ──
+            var INIT_COMPANY  = '<t t-esc="form_data.get(\'training_company_id\', \'\')"/>';
+            var INIT_PROGRAM  = '<t t-esc="form_data.get(\'training_program_id\', \'\')"/>';
+            var INIT_WEEK     = '<t t-esc="form_data.get(\'training_week_id\', \'\')"/>';
+            var INIT_LEVEL    = '<t t-esc="form_data.get(\'university_group\', \'\')"/>';
+
+            // ── Helpers ──
+            function fmtDate(s) {
+                if (!s) return '';
+                var d = new Date(s);
+                return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+            }
+            function getJSON(url, cb) {
+                var x = new XMLHttpRequest();
+                x.open('GET', url, true);
+                x.onload = function () {
+                    try { cb(JSON.parse(x.responseText)); } catch(e) { cb([]); }
+                };
+                x.onerror = function () { cb([]); };
+                x.send();
+            }
+            function show(id) { document.getElementById(id).style.display = ''; }
+            function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+            // ── National ID counter ──
+            var nidEl = document.getElementById('national_id_input');
+            var nidCt = document.getElementById('nid_counter');
+            if (nidEl) {
+                function refreshCounter() {
+                    var n = nidEl.value.length;
+                    nidCt.textContent = n + ' / 14 digits';
+                    nidCt.style.color = n === 14 ? '#198754' : '#6c757d';
+                }
+                nidEl.addEventListener('input', refreshCounter);
+                refreshCounter();
+            }
+
+            // ── Build week cards ──
+            function buildWeekCards(weeks, selectedId) {
+                var box = document.getElementById('week_cards');
+                var inp = document.getElementById('inp_week');
+                box.innerHTML = '';
+                if (!weeks || !weeks.length) {
+                    box.innerHTML = '<p class="text-muted">No weeks configured for this program.</p>';
+                    return;
+                }
+                weeks.forEach(function (w) {
+                    var sel = String(w.id) === String(selectedId);
+                    var card = document.createElement('div');
+                    card.style.cssText = [
+                        'width:160px', 'border-radius:10px', 'padding:14px 12px',
+                        'text-align:center', 'cursor:' + (w.full ? 'not-allowed' : 'pointer'),
+                        'border:2px solid ' + (sel ? '#0e6b6b' : (w.full ? '#dee2e6' : '#ced4da')),
+                        'background:'      + (sel ? '#e8f7f7' : (w.full ? '#f8f9fa' : '#ffffff')),
+                        'opacity:'         + (w.full ? '0.6' : '1'),
+                        'transition:all .15s', 'user-select:none',
+                    ].join(';');
+                    card.innerHTML =
+                        '<div style="font-weight:700;color:#0d2137;font-size:.95rem;">Week ' + w.number + '</div>' +
+                        '<div style="font-size:.78rem;color:#555;margin:4px 0;">' + fmtDate(w.start) + ' \u2013 ' + fmtDate(w.end) + '</div>' +
+                        '<div style="font-size:.8rem;font-weight:600;margin-top:6px;color:' + (w.full ? '#dc3545' : '#198754') + ';">' +
+                            (w.full ? '&#128308; FULL' : '&#128994; ' + w.left + ' OPEN') +
+                        '</div>';
+                    if (!w.full) {
+                        card.addEventListener('click', function () {
+                            document.querySelectorAll('#week_cards > div').forEach(function (c) {
+                                c.style.border     = '2px solid #ced4da';
+                                c.style.background = '#ffffff';
+                            });
+                            card.style.border     = '2px solid #0e6b6b';
+                            card.style.background = '#e8f7f7';
+                            inp.value = w.id;
+                        });
+                        if (sel) { inp.value = w.id; }
+                    }
+                    box.appendChild(card);
+                });
+            }
+
+            // ── Load weeks ──
+            function loadWeeks(pid, selWeek) {
+                hide('div_weeks');
+                show('div_weeks_loading');
+                document.getElementById('inp_week').value = '';
+                getJSON('/training/ajax/weeks?program_id=' + pid, function (weeks) {
+                    hide('div_weeks_loading');
+                    show('div_weeks');
+                    buildWeekCards(weeks, selWeek || '');
+                });
+            }
+
+            // ── Show year level badges ──
+            function showLevels(level_ids) {
+                var box = document.getElementById('level_badges');
+                box.innerHTML = '';
+                if (level_ids && level_ids.length) {
+                    level_ids.forEach(function (l) {
+                        var b = document.createElement('span');
+                        b.style.cssText = 'background:#0e6b6b;color:#fff;padding:5px 14px;border-radius:20px;font-size:.85rem;';
+                        b.textContent = l.name;
+                        box.appendChild(b);
+                    });
+                    show('div_levels');
+                } else {
+                    hide('div_levels');
+                }
+            }
+
+            // ── Load programs for company ──
+            function loadPrograms(cid, lid, selProgram, selWeek, showAlert) {
+                var sel = document.getElementById('sel_program');
+                sel.innerHTML = '<option value="">Select Program</option>';
+                hide('div_program');
+                hide('div_levels');
+                hide('div_weeks');
+                if (!cid) return;
+
+                var url = '/training/ajax/programs?company_id=' + cid + (lid ? '&level_id=' + lid : '');
+                getJSON(url, function (programs) {
+                    if (!programs || !programs.length) {
+                        show('div_program');
+                        if (showAlert) {
+                            var companyName = selCompany.options[selCompany.selectedIndex].text;
+                            alert('No training programs are available for your year level at ' + companyName + '. Please contact your coordinator or choose a different company.');
+                        }
+                        return;
+                    }
+                    programs.forEach(function (p) {
+                        var o = document.createElement('option');
+                        o.value = p.id;
+                        o.textContent = p.name + (p.code ? ' (' + p.code + ')' : '');
+                        if (String(p.id) === String(selProgram)) o.selected = true;
+                        sel.appendChild(o);
+                    });
+                    show('div_program');
+
+                    var autoId = selProgram || (programs.length === 1 ? programs[0].id : null);
+                    if (autoId) {
+                        sel.value = String(autoId);
+                        var prog = programs.find(function(p){ return String(p.id) === String(autoId); });
+                        if (prog) {
+                            showLevels(prog.level_ids);
+                            loadWeeks(autoId, selWeek);
+                        }
+                    }
+                });
+            }
+
+            // ── Student lookup by university ID ──
+            var univIdInput = document.getElementById('university_id_input');
+            var lookupStatus = document.getElementById('student_lookup_status');
+            var _resolvedLevelId = '';  // stores level id from student lookup
+
+            function doStudentLookup() {
+                var uid = univIdInput.value.trim();
+                if (!uid) return;
+                lookupStatus.textContent = 'Looking up...';
+                lookupStatus.style.color = '#6c757d';
+                getJSON('/training/ajax/student?university_id=' + encodeURIComponent(uid), function (data) {
+                    if (data.found) {
+                        // Show auto-filled section
+                        show('div_student_info');
+                        hide('div_not_found');
+                        show('div_training_section');
+                        document.getElementById('btn_submit').style.display = '';
+                        lookupStatus.textContent = '&#10003; Student found';
+                        lookupStatus.style.color = '#198754';
+
+                        // Fill name
+                        var nameInp = document.getElementById('inp_student_name');
+                        if (nameInp) nameInp.value = data.name || '';
+
+                        // Fill phone
+                        var phoneInp = document.getElementById('inp_phone');
+                        if (phoneInp) phoneInp.value = data.phone || '';
+
+                        // Fill national ID
+                        var nidInp = document.getElementById('national_id_input');
+                        if (nidInp) {
+                            nidInp.value = data.national_id || '';
+                            if (nidCt) {
+                                var n = nidInp.value.length;
+                                nidCt.textContent = n + ' / 14 digits';
+                                nidCt.style.color = n === 14 ? '#198754' : '#6c757d';
+                            }
+                        }
+
+                        // Fill university
+                        var univSel = document.getElementById('sel_university');
+                        if (univSel && data.university_key) univSel.value = data.university_key;
+
+                        // Fill year level + trigger program reload
+                        var levelSel = document.getElementById('sel_level');
+                        if (levelSel && data.level_id) {
+                            levelSel.value = data.level_id;
+                            _resolvedLevelId = data.level_id;
+                        }
+                        // Always reload programs with resolved level
+                        var cid = document.getElementById('sel_company') ? document.getElementById('sel_company').value : '';
+                        if (cid) loadPrograms(cid, _resolvedLevelId || data.level_id, '', '', false);
+
+                    } else {
+                        // Not found — block registration
+                        hide('div_student_info');
+                        show('div_not_found');
+                        hide('div_training_section');
+                        document.getElementById('btn_submit').style.display = 'none';
+                        lookupStatus.textContent = '&#10060; Not registered';
+                        lookupStatus.style.color = '#dc3545';
+                    }
+                });
+            }
+
+            if (univIdInput) {
+                univIdInput.addEventListener('blur', doStudentLookup);
+                univIdInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); doStudentLookup(); }
+                });
+            }
+
+            // Show student info div if form_data exists (re-render after error)
+            var INIT_UNIV_ID = '<t t-esc="form_data.get(\'university_id\', \'\')"/>';
+            if (INIT_UNIV_ID) {
+                show('div_student_info');
+                show('div_training_section');
+                document.getElementById('btn_submit').style.display = '';
+            }
+
+            // ── Wire events ──
+            var selCompany = document.getElementById('sel_company');
+            var selProgram = document.getElementById('sel_program');
+            var selLevel   = document.getElementById('sel_level');
+
+            if (selLevel) {
+                selLevel.addEventListener('change', function () {
+                    _resolvedLevelId = this.value;
+                    var cid = selCompany.value;
+                    if (cid) {
+                        loadPrograms(cid, this.value, '', '', true);
+                    }
+                });
+            }
+
+            selCompany.addEventListener('change', function () {
+                var lid = _resolvedLevelId || (document.getElementById('sel_level') ? document.getElementById('sel_level').value : '');
+                loadPrograms(this.value, lid, '', '', true);
+            });
+
+            selProgram.addEventListener('change', function () {
+                var pid = this.value;
+                if (!pid) { hide('div_levels'); hide('div_weeks'); return; }
+                loadWeeks(pid, '');
+                var cid = selCompany.value;
+                var lid = document.getElementById('sel_level') ? document.getElementById('sel_level').value : '';
+                var url = '/training/ajax/programs?company_id=' + cid + (lid ? '&level_id=' + lid : '');
+                getJSON(url, function (programs) {
+                    var prog = programs.find(function(p){ return String(p.id) === String(pid); });
+                    if (prog) showLevels(prog.level_ids);
+                });
+            });
+
+            // ── Restore state on validation re-render ──
+            if (INIT_COMPANY) {
+                loadPrograms(INIT_COMPANY, INIT_LEVEL, INIT_PROGRAM, INIT_WEEK, false);
+            }
+
+        })();
+        /* ]]> */
+        </script>
+
+    </t>
+</template>
+
+
+<!-- Success page -->
+<template id="training_portal_registration_success" name="Training Registration Success">
+    <t t-call="website.layout">
+        <div class="o_portal_wrap">
+            <div style="background:linear-gradient(135deg,#0d2137 0%,#0e6b6b 100%); padding:48px 0 40px; text-align:center; margin-bottom:36px;">
+                <h1 style="color:#fff; font-size:2rem; font-weight:700; margin:0;">
+                    &#127891; <span style="color:#26d0ce;">Training</span> Registration
+                </h1>
+            </div>
+            <div class="container text-center" style="max-width:600px; margin:0 auto; padding-bottom:60px;">
+                <div class="card shadow-sm p-5" style="border-radius:12px; border-left:4px solid #0e6b6b;">
+                    <div style="font-size:3rem; margin-bottom:16px;">&#9989;</div>
+                    <h3 style="color:#0d2137; font-weight:700;">Registration Submitted!</h3>
+                    <p class="text-muted mt-3">
+                        Thank you, <strong><t t-esc="student_name"/></strong>.<br/>
+                        Your registration has been received and is pending confirmation.
+                    </p>
+                    <a href="/training/register" class="btn mt-3"
+                       style="background:linear-gradient(135deg,#0d2137,#0e6b6b); color:#fff; border-radius:8px; padding:10px 32px; font-weight:600;">
+                        Register Another Student
+                    </a>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+</odoo>

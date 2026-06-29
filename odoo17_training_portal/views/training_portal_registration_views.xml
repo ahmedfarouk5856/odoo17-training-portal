@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="training_portal_registration_tree" model="ir.ui.view">
+        <field name="name">training.portal.registration.tree</field>
+        <field name="model">training.portal.registration</field>
+        <field name="arch" type="xml">
+            <tree string="Training Registrations" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'" decoration-muted="state == 'cancelled'">
+                <field name="student_name"/>
+                <field name="university_id"/>
+                <field name="national_id"/>
+                <field name="phone_whatsapp"/>
+                <field name="training_company_id"/>
+                <field name="training_program_id"/>
+                <field name="training_week_id"/>
+                <field name="week_start_date"/>
+                <field name="week_end_date"/>
+                <field name="state"/>
+                <field name="create_date" string="Registered On"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="training_portal_registration_form" model="ir.ui.view">
+        <field name="name">training.portal.registration.form</field>
+        <field name="model">training.portal.registration</field>
+        <field name="arch" type="xml">
+            <form string="Training Registration">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="btn-primary" states="draft"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            states="draft,confirmed"/>
+                    <button name="action_reset" string="Reset to Draft" type="object"
+                            states="cancelled"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+                </header>
+                <sheet>
+                    <group string="Student Information">
+                        <field name="student_name"/>
+                        <field name="university_name"/>
+                        <field name="university_id"/>
+                        <field name="university_group"/>
+                        <field name="national_id"/>
+                        <field name="phone_whatsapp"/>
+                    </group>
+                    <group string="Training Details">
+                        <field name="training_company_id"/>
+                        <field name="training_program_id"/>
+                        <field name="training_week_id"/>
+                        <field name="week_start_date"/>
+                        <field name="week_end_date"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_training_portal_registration" model="ir.actions.act_window">
+        <field name="name">Portal Registrations</field>
+        <field name="res_model">training.portal.registration</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

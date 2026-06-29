@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_training_portal_registration_public,training.portal.registration.public,model_training_portal_registration,base.group_public,1,1,0,0
+access_training_portal_registration_user,training.portal.registration.user,model_training_portal_registration,base.group_user,1,1,1,1
